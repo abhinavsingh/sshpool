@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    sshpool.sshpoolctl
+    ~~~~~~~~~~~~~~~~~~
+
+    Controller script to communicate with SSH channels via RESTful API or an interactive shell
+
+    :copyright: (c) 2013 by Abhinav Singh.
+    :license: BSD, see LICENSE for more details.
+"""
 import cmd
 import argparse
 import requests

@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+    sshpool.sshpoold
+    ~~~~~~~~~~~~~~~~
+
+    Maintains pool of SSH channels and allow communication via RESTful API
+
+    :copyright: (c) 2013 by Abhinav Singh.
+    :license: BSD, see LICENSE for more details.
+"""
 import argparse
 import urlparse
 import multiprocessing
