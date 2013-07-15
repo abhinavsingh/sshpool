@@ -14,9 +14,9 @@ import multiprocessing
 import paramiko
 import logging
 import getpass
-import flask
-
-web = flask.Flask('sshpool')
+import time
+from flask import Flask, Response, request, jsonify
+from flask.views import MethodView
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger('sshpool')
@@ -38,11 +38,14 @@ class Channel(multiprocessing.Process):
         self.inner, self.outer = multiprocessing.Pipe(duplex=True)
         self.client = None
         self.daemon = True
+        
+        self.running_since = time.time()
     
     @staticmethod
     def init(channel):
         chan = Channel(channel)
         Channel.channels[chan.alias] = chan
+        chan.start()
         return chan
     
     def connect(self):
@@ -85,38 +88,101 @@ class Channel(multiprocessing.Process):
             self.inner.send('%r' % e)
         except KeyboardInterrupt, e:
             pass
-        
-        self.client.close()
+        finally:
+            logger.info('closing connection to %s' % self)
+            self.client.close()
+    
+    def stop(self):
+        self.terminate()
+    
+    def info(self):
+        return {
+            'username': self.username,
+            'password': self.password,
+            'hostname': self.hostname,
+            'port': self.port,
+            'is_alive': self.is_alive(),
+            'uptime': int(time.time() - self.running_since),
+        }
     
     def __str__(self):
         return '%s://%s:%s@%s:%s' % (self.alias, self.username, self.password, self.hostname, self.port)
 
-@web.route('/channel/<alias>', methods=['POST'])
-def handle_commands(alias):
-    if alias not in Channel.channels:
-        return flask.Response('Not found', 400)
+class ChannelAPI(MethodView):
     
-    chan = Channel.channels[alias]
-    if not chan.is_alive():
-        chan = Channel.init(str(chan))
-        chan.start()
+    def get(self, alias):
+        if alias:
+            if alias not in Channel.channels:
+                return Response('NOT FOUND', 400)
+            
+            chan = Channel.channels[alias]
+            return jsonify(**chan.info())
+        
+        kwargs = dict()
+        for alias in Channel.channels:
+            chan = Channel.channels[alias]
+            kwargs[alias] = chan.info()
+        return jsonify(**kwargs)
     
-    cmd = flask.request.data
-    chan.send(cmd)
-    return chan.recv()
+    def post(self, alias):
+        # add new channel
+        if not alias:
+            channel = request.data
+            _chan = Channel.init(channel)
+            return 'OK'
+        
+        # execute cmd on existing channel
+        if alias not in Channel.channels:
+            return Response('NOT FOUND', 400)
+        
+        chan = Channel.channels[alias]
+        if not chan.is_alive():
+            chan = Channel.init(str(chan))
+        
+        cmd = request.data
+        chan.send(cmd)
+        return chan.recv()
+    
+    def delete(self, alias):
+        if alias not in Channel.channels:
+            return Response('NOT FOUND', 400)
+        
+        chan = Channel.channels[alias]
+        chan.stop()
+        del Channel.channels[alias]
+        return 'OK'
+
+class Http(object):
+    
+    def __init__(self):
+        self.web = Flask('sshpool')
+        self.enable_channel_api()
+    
+    def enable_channel_api(self):
+        channel_view = ChannelAPI.as_view('channel_api')
+        
+        self.web.add_url_rule('/channels', defaults={'alias': None}, view_func=channel_view, methods=['GET',])
+        self.web.add_url_rule('/channels/<alias>', view_func=channel_view, methods=['GET',])
+        
+        self.web.add_url_rule('/channels', defaults={'alias': None}, view_func=channel_view, methods=['POST',])
+        self.web.add_url_rule('/channels/<alias>', view_func=channel_view, methods=['POST',])
+        
+        self.web.add_url_rule('/channels/<alias>', view_func=channel_view, methods=['DELETE',])
+    
+    def start(self, host, port, debug=False):
+        self.web.run(host=host, port=port, debug=debug)
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--channel', action='append', help='alias://user:pass@host:port')
+    parser.add_argument('--channel', default=list(), action='append', help='alias://user:pass@host:port')
     parser.add_argument('--host', default='127.0.0.1', help='SSHPool interface (default: 127.0.0.1)')
     parser.add_argument('--port', default=8877, type=int, help='SSHPool listening port (default: 8877)')
     args = parser.parse_args()
     
     for channel in args.channel:
-        chan = Channel.init(channel)
-        chan.start()
+        _chan = Channel.init(channel)
     
-    web.run(host=args.host, port=args.port, debug=False)
+    Http().start(args.host, args.port)
     
     for alias in Channel.channels:
         chan = Channel.channels[alias]
