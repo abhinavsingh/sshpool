@@ -58,21 +58,21 @@ class API(object):
 
 class Ctl(cmd.Cmd):
     
+    ruler = '~'
     prompt = 'sshpool> '
-    
-    commands = {
-        'status': 'View status of started channels',
-        'start': 'Add a new channel',
-        'run': 'Run arbitrary commands over a channel',
-        'stop': 'Stop an existing channel',
-        'help': 'Display help and available commands'
-    }
+    intro = '==> Press Ctrl-C to exit <=='
     
     def __init__(self, host, port):
         cmd.Cmd.__init__(self)
         self.host = host
         self.port = port
         self.api = API(self.host, self.port)
+    
+    def out(self, line):
+        if line is not None:
+            if isinstance(line, unicode):
+                line = line.encode('utf-8')
+            self.stdout.write(line + '\n')
     
     def do_status(self, alias):
         r = self.api.status(alias)
@@ -84,17 +84,23 @@ class Ctl(cmd.Cmd):
                 dsn = '%s:%s@%s:%s' % (info['username'], info['password'], info['hostname'], info['port'])
                 status = "running" if info['is_alive'] else "dead"
                 uptime = info['uptime']
-                print '%s\t\t%s\t%s\t%s' % (alias, dsn, status, uptime)
+                self.out('%s\t\t%s\t%s\t%s' % (alias, dsn, status, uptime))
         else:
-            print r.status_code
+            self.out(r.status_code)
+    
+    def help_status(self):
+        self.out('status\t\tView status of started channels')
     
     def do_start(self, dsn):
         r = self.api.start(dsn)
         if r is None: return
         if r.status_code == 200:
-            print r.text
+            self.out(r.text)
         else:
-            print r.status_code
+            self.out(r.status_code)
+    
+    def help_start(self):
+        self.out('start <dsn>\tAdd a new channel')
     
     def do_run(self, arg):
         args = arg.split()
@@ -103,21 +109,38 @@ class Ctl(cmd.Cmd):
         r = self.api.run(alias, cmd)
         if r is None: return
         if r.status_code == 200:
-            print r.text
+            self.out(r.text)
         else:
-            print r.status_code
+            self.out(r.status_code)
+    
+    def help_run(self):
+        self.out('run <alias> <cmd>\tRun arbitrary commands over a channel')
     
     def do_stop(self, alias):
         r = self.api.stop(alias)
         if r is None: return
         if r.status_code == 200:
-            print r.text
+            self.out(r.text)
         else:
-            print r.status_code
+            self.out(r.status_code)
     
-    def do_help(self, arg):
-        for cmd in self.commands:
-            print '%s\t\t%s' % (cmd, self.commands[cmd])
+    def help_stop(self):
+        self.out('stop <alias>\tStop an existing channel')
+    
+    def do_exit(self, arg):
+        sys.exit(0)
+    
+    def help_exit(self):
+        self.out('exit\t\tExit sshpoolctl shell')
+    
+    do_quit = do_exit
+    
+    def help_quit(self):
+        self.out('quit\t\tExit sshpoolctl shell')
+    
+    def help_help(self):
+        self.out("help\t\tPrint a list of available actions")
+        self.out("help <action>\tPrint help for <action>")
     
     def emptyline(self):
         pass
