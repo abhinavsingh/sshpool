@@ -42,6 +42,7 @@ setup(
     license             = sshpool.__license__,
     packages            = find_packages(),
     install_requires    = open('requirements.txt', 'rb').read().strip().split(),
+    tests_require       = open('test_requirements.txt', 'rb').read().strip().split(),
     entry_points        = entry_points,
     classifiers         = classifiers
 )

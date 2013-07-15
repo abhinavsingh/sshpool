@@ -15,6 +15,7 @@ import paramiko
 import logging
 import getpass
 import time
+import socket
 from flask import Flask, Response, request, jsonify
 from flask.views import MethodView
 
@@ -30,6 +31,8 @@ class Channel(multiprocessing.Process):
         chan = urlparse.urlparse(channel)
         
         self.alias = chan.scheme
+        assert self.alias is not ''
+        
         self.username = chan.username if chan.username else getpass.getuser()
         self.password = chan.password
         self.hostname = chan.hostname
@@ -39,42 +42,31 @@ class Channel(multiprocessing.Process):
         self.client = None
         self.daemon = True
         
-        self.running_since = time.time()
-    
-    @staticmethod
-    def init(channel):
-        chan = Channel(channel)
-        Channel.channels[chan.alias] = chan
-        chan.start()
-        return chan
+        self.start_time = time.time()
     
     def connect(self):
-        logger.info('connecting to %s' % self)
-        self.client = paramiko.SSHClient()
-        self.client.load_system_host_keys()
-        self.client.set_missing_host_key_policy(paramiko.WarningPolicy())
-        self.client.connect(self.hostname, self.port, self.username, self.password)
-    
-    def send(self, cmd):
-        logger.debug('sending command %s' % cmd)
-        self.outer.send(cmd)
-    
-    def recv(self):
-        ret = self.outer.recv()
-        logger.debug('receiving response %s' % ret)
-        return ret
-    
-    def run(self):
         try:
-            self.connect()
+            logger.info('connecting to %s' % self)
+            self.client = paramiko.SSHClient()
+            self.client.load_system_host_keys()
+            self.client.set_missing_host_key_policy(paramiko.WarningPolicy())
+            self.client.connect(self.hostname, self.port, self.username, self.password)
             logger.info('connected to %s' % self)
+        except socket.gaierror, e:
+            logger.critical('connection to %s failed because host is not known' % self)
+            raise
         except paramiko.AuthenticationException, e:
             logger.critical('connection to %s failed due to authentication failure' % self)
+            raise
+        except paramiko.BadAuthenticationType, e:
+            logger.critical('connection to %s failed due to unsupported authentication type %r' (self, e))
             raise
         except Exception, e:
             logger.critical('connection to %s failed with reason %r' % (self, e))
             raise
-        
+    
+    def run(self):
+        self.connect()
         try:
             while True:
                 cmd = self.inner.recv()
@@ -87,13 +79,27 @@ class Channel(multiprocessing.Process):
             logger.critical('connection dropped with exception %r' % e)
             self.inner.send('%r' % e)
         except KeyboardInterrupt, e:
-            pass
+            logger.info('caught keyboard interrupt, stopping %s' % self)
+            self.inner.send('%r' % e)
         finally:
             logger.info('closing connection to %s' % self)
             self.client.close()
     
-    def stop(self):
-        self.terminate()
+    @staticmethod
+    def init(channel, start=True):
+        chan = Channel(channel)
+        Channel.channels[chan.alias] = chan
+        if start: chan.start()
+        return chan
+    
+    def send(self, cmd):
+        logger.debug('sending command %s' % cmd)
+        self.outer.send(cmd)
+    
+    def recv(self):
+        ret = self.outer.recv()
+        logger.debug('receiving response %s' % ret)
+        return ret
     
     def info(self):
         return {
@@ -102,7 +108,7 @@ class Channel(multiprocessing.Process):
             'hostname': self.hostname,
             'port': self.port,
             'is_alive': self.is_alive(),
-            'uptime': int(time.time() - self.running_since),
+            'start_time': self.start_time,
         }
     
     def __str__(self):
@@ -148,7 +154,7 @@ class ChannelAPI(MethodView):
             return Response('NOT FOUND', 400)
         
         chan = Channel.channels[alias]
-        chan.stop()
+        chan.terminate()
         del Channel.channels[alias]
         return 'OK'
 

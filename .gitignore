@@ -1,7 +1,9 @@
 .project
 .pydevproject
-.settings/
-
+.settings
+.coverage
+.tox
 *.pyc
-dist/
-sshpool.egg-info/
+cover
+dist
+sshpool.egg-info

@@ -1,3 +1,6 @@
 include LICENSE
-include requirements.txt
+include Makefile
 include README.md
+include requirements.txt
+include test_requirements.txt
+include tox.ini

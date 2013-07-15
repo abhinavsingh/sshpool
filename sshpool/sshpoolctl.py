@@ -8,10 +8,12 @@
     :copyright: (c) 2013 by Abhinav Singh.
     :license: BSD, see LICENSE for more details.
 """
+import sys
 import cmd
 import argparse
 import requests
 import readline
+import time
 
 class API(object):
     
@@ -83,7 +85,7 @@ class Ctl(cmd.Cmd):
                 info = resp[alias]
                 dsn = '%s:%s@%s:%s' % (info['username'], info['password'], info['hostname'], info['port'])
                 status = "running" if info['is_alive'] else "dead"
-                uptime = info['uptime']
+                uptime = int(time.time() - info['start_time'])
                 self.out('%s\t\t%s\t%s\t%s' % (alias, dsn, status, uptime))
         else:
             self.out(r.status_code)
