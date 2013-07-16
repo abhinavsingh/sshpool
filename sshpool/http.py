@@ -10,7 +10,7 @@
 """
 import logging
 from flask import Flask
-from views import API
+from .views import API
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger('sshpool.http')

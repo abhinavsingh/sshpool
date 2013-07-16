@@ -12,7 +12,7 @@ import sys
 import cmd
 import time
 import logging
-from client import API
+from .client import API
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger('sshpool.ctl')

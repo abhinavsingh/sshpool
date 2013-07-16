@@ -11,7 +11,7 @@
 import logging
 from flask import Response, request, jsonify
 from flask.views import MethodView
-from channel import Channel
+from .channel import Channel
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger('sshpool.views')
