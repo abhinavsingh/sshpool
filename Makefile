@@ -1,4 +1,4 @@
-.PHONY: clean release upload text tox
+.PHONY: clean doc audit package release upload text tox
 
 all: clean test
 
