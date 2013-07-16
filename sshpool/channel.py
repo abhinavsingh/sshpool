@@ -3,8 +3,8 @@
     sshpool.channel
     ~~~~~~~~~~~~~~~
 
-    This module provides capability to spawn SSH channels in 
-    a separate process and ability to execute arbitrary 
+    This module provides capability to spawn SSH channels in
+    a separate process and ability to execute arbitrary
     shell commands by communicating over pipe.
 
     :copyright: (c) 2013 by Abhinav Singh.
@@ -26,7 +26,7 @@ paramiko_transport_logger.setLevel(logging.WARNING)
 
 class Channel(multiprocessing.Process):
     
-    """Spawn SSH channel and execute shell commands by communicating over pipe."""
+    """Spawn SSH channel and provides communication over pipe."""
     
     channels = dict()
     
@@ -72,7 +72,7 @@ class Channel(multiprocessing.Process):
         except paramiko.AuthenticationException, e:
             logger.critical('connection to %s failed due to authentication failure' % self)
             raise
-        except Exception, e: #pragma: no cover
+        except Exception, e:  # pragma: no cover
             logger.critical('connection to %s failed with reason %r' % (self, e))
             raise
     
@@ -120,7 +120,8 @@ class Channel(multiprocessing.Process):
         """
         chan = Channel(channel)
         Channel.channels[chan.alias] = chan
-        if start: chan.start()
+        if start: 
+            chan.start()
         return chan
     
     def send(self, cmd):
