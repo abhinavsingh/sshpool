@@ -12,7 +12,6 @@ import sys
 import cmd
 import time
 import logging
-import readline
 from client import API
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
@@ -38,7 +37,10 @@ class Ctl(cmd.Cmd):
     
     def do_status(self, alias):
         r = self.api.status(alias)
-        if r is None: return
+        
+        if r is None: 
+            return
+        
         if r.status_code == 200:
             resp = r.json()
             for alias in resp:
@@ -55,7 +57,9 @@ class Ctl(cmd.Cmd):
     
     def do_start(self, dsn):
         r = self.api.start(dsn)
-        if r is None: return
+        if r is None: 
+            return
+        
         if r.status_code == 200:
             self.out(r.text)
         else:
@@ -69,7 +73,10 @@ class Ctl(cmd.Cmd):
         alias = args[0]
         cmd = ' '.join(args[1:])
         r = self.api.run(alias, cmd)
-        if r is None: return
+        
+        if r is None: 
+            return
+        
         if r.status_code == 200:
             self.out(r.text)
         else:
@@ -80,7 +87,10 @@ class Ctl(cmd.Cmd):
     
     def do_stop(self, alias):
         r = self.api.stop(alias)
-        if r is None: return
+        
+        if r is None: 
+            return
+        
         if r.status_code == 200:
             self.out(r.text)
         else:

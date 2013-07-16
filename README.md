@@ -1,7 +1,7 @@
 SSHPool
 =======
 
-Pool of SSH channels accessible via RESTful API and command line utility
+Manage persistent pool of SSH channels accessible via RESTful API and command line utility
 
 ![Build status](https://api.travis-ci.org/abhinavsingh/sshpool.png)
 
@@ -12,10 +12,12 @@ To install sshpool, simply:
 
     $ pip install sshpool
 
+This will add two executable scripts `sshpoold` and `sshpoolctl` inside your python environment bin folder.
+
 sshpoold
 --------
 
-sshpoold utility is responsible for maintaining pool of SSH channels and allow communication via RESTful API
+`sshpoold` manages SSH channels and allow communication via RESTful API
 
     $ sshpoold -h
     
@@ -27,22 +29,37 @@ sshpoold utility is responsible for maintaining pool of SSH channels and allow c
       --host HOST        SSHPool interface (default: 127.0.0.1)
       --port PORT        SSHPool listening port (default: 8877)
 
-Start sshpoold utility:
+Start `sshpoold` daemon:
 
     $ sshpoold
     [2013-07-16 22:12:46,291]  * Running on http://127.0.0.1:8877/
 
-Optionally, sshpoold also accepts one or more SSH channel configuration:
+Optionally, `sshpoold` daemon can also be started with one or more SSH channel DSN:
 
-    $ $ sshpoold --channel=localhost://localhost
+    $ sshpoold --channel=localhost://localhost
     [2013-07-16 22:14:31,325] connecting to localhost://abhinavsingh:None@localhost:22
     [2013-07-16 22:14:31,331]  * Running on http://127.0.0.1:8877/
     [2013-07-16 22:14:31,815] connected to localhost://abhinavsingh:None@localhost:22
 
+Channel DSN
+-----------
+
+[DSN](http://en.wikipedia.org/wiki/Data_source_name) string describes a connection to SSH server. Format:
+
+    alias://user:pass@host:port
+
+Attributes | Description
+--- | ---
+alias | *(required)* An alias to use with `sshpoolctl` and RESTful API's
+user | Defaults to current system user
+pass | If not provided `sshpoold` will attempt to use public keys for authentication
+host | *(required)* IP Address or FQDN
+port | Defaults to 22
+
 sshpoolctl
 ----------
 
-sshpoolctl provides an interactive shell to communicate with SSH channels via RESTful API
+`sshpoolctl` provides an interactive shell to communicate with `sshpoold` daemon via RESTful API
 
     $ sshpoolctl -h
     

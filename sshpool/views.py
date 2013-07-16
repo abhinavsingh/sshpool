@@ -39,7 +39,7 @@ class API(MethodView):
         """Start a new SSH channel or execute command over a SSH channel."""
         if not alias:
             channel = request.data
-            _chan = Channel.init(channel)
+            Channel.init(channel)
             return 'OK'
         
         if alias not in Channel.channels:
