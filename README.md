@@ -3,6 +3,8 @@ SSHPool
 
 Pool of SSH channels accessible via RESTful API and command line utility
 
+![Build status](https://api.travis-ci.org/abhinavsingh/sshpool.png)
+
 Install
 -------
 
