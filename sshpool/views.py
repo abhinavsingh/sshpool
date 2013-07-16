@@ -59,6 +59,5 @@ class API(MethodView):
             return Response('NOT FOUND', 400)
         
         chan = Channel.channels[alias]
-        chan.terminate()
-        del Channel.channels[alias]
+        chan.stop()
         return 'OK'

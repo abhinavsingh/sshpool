@@ -114,7 +114,7 @@ class Channel(multiprocessing.Process):
             Channel.
         
         It is highly recommended to use this API to initialize SSH channels 
-        as it updates global channel registry required for communication 
+        as it also updates global channel registry required for communication 
         over RESTful API.
         
         """
@@ -160,6 +160,16 @@ class Channel(multiprocessing.Process):
             'is_alive': self.is_alive(),
             'start_time': self.start_time,
         }
+    
+    def stop(self):
+        """API to terminate SSH channel.
+        
+        It is highly recommended to use this API to terminate SSH channel
+        process as it also updates global channel registry.
+        
+        """
+        self.terminate()
+        del Channel.channels[self.alias]
     
     def __str__(self):
         return '%s://%s:%s@%s:%s' % (self.alias, self.username, self.password, self.hostname, self.port)

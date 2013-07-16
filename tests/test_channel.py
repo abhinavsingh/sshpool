@@ -103,10 +103,8 @@ class TestChannel(unittest.TestCase):
         chan.send('echo Hello World')
         chan.connect()
         chan.run_once()
-        time.sleep(0.1)
         self.assertTrue(chan.outer.poll())
         self.assertEqual(chan.recv(), 'Hello World')
-        time.sleep(0.1)
     
     def test_send(self):
         chan = Channel.init('dummy://dummy.host', False)
@@ -128,3 +126,16 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(info['hostname'], 'dummy.host')
         self.assertEqual(info['port'], 22)
         self.assertFalse(info['is_alive'])
+    
+    @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
+    def test_start_stop(self, mock_connect):
+        mock_connect.return_value = None
+        chan = Channel.init('dummy://dummy.host')
+        time.sleep(0.1)
+        self.assertTrue(chan.is_alive())
+        self.assertDictContainsSubset({chan.alias: chan}, Channel.channels)
+        chan.stop()
+        time.sleep(0.1)
+        self.assertTrue(not chan.is_alive())
+        with self.assertRaises(KeyError):
+            Channel.channels[chan.alias]
