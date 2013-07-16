@@ -55,26 +55,28 @@ class Channel(multiprocessing.Process):
         except socket.gaierror, e:
             logger.critical('connection to %s failed because host is not known' % self)
             raise
+        except paramiko.BadAuthenticationType, e:
+            logger.critical('connection to %s failed due to unsupported authentication type, supported types are %s' % (self, ','.join(e.allowed_types)))
+            raise
         except paramiko.AuthenticationException, e:
             logger.critical('connection to %s failed due to authentication failure' % self)
             raise
-        except paramiko.BadAuthenticationType, e:
-            logger.critical('connection to %s failed due to unsupported authentication type %r' (self, e))
-            raise
-        except Exception, e:
+        except Exception, e: #pragma: no cover
             logger.critical('connection to %s failed with reason %r' % (self, e))
             raise
+    
+    def run_once(self):
+        cmd = self.inner.recv()
+        stdin, stdout, stderr = self.client.exec_command(cmd)
+        out, err = stdout.read(), stderr.read()
+        ret = out if len(err) == 0 else err
+        self.inner.send(ret)
     
     def run(self):
         self.connect()
         try:
             while True:
-                cmd = self.inner.recv()
-                stdin, stdout, stderr = self.client.exec_command(cmd)
-                err = stderr.read()
-                out = stdout.read()
-                ret = out if len(err) == 0 else err
-                self.inner.send(ret)
+                self.run_once()
         except paramiko.SSHException, e:
             logger.critical('connection dropped with exception %r' % e)
             self.inner.send('%r' % e)
