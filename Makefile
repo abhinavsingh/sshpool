@@ -7,6 +7,9 @@ clean:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 
+doc:
+	$(MAKE) -C docs html
+
 package:
 	python setup.py sdist
 
@@ -17,4 +20,4 @@ test:
 	nosetests -v --with-coverage --cover-package=sshpool --cover-erase --cover-html --nocapture
 
 tox:
-	tox
+	tox -r

@@ -3,7 +3,7 @@ import getpass
 import socket
 import mock
 import paramiko
-from sshpool.sshpoold import Channel
+from sshpool.channel import Channel
 
 class TestChannel(unittest.TestCase):
     
@@ -40,21 +40,21 @@ class TestChannel(unittest.TestCase):
         with self.assertRaises(socket.gaierror):
             chan.connect()
     
-    @mock.patch('sshpool.sshpoold.paramiko.SSHClient.connect')
+    @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
     def test_ssh_auth_failure(self, mock_connect):
         mock_connect.side_effect = paramiko.AuthenticationException('Authentication failed.')
         chan = Channel.init('dummy://dummy.host', False)
         with self.assertRaises(paramiko.AuthenticationException):
             chan.connect()
     
-    @mock.patch('sshpool.sshpoold.paramiko.SSHClient.connect')
+    @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
     def test_ssh_bad_auth_types(self, mock_connect):
         mock_connect.side_effect = paramiko.BadAuthenticationType('Bad authentication type', ['publickey'])
         chan = Channel.init('dummy://user:pass@dummy.host', False)
         with self.assertRaises(paramiko.BadAuthenticationType):
             chan.connect()
     
-    @mock.patch('sshpool.sshpoold.paramiko.SSHClient.connect')
+    @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
     def test_ssh_connect_success(self, mock_connect):
         mock_connect.return_value = None
         chan = Channel.init('dummy://dummy.host', False)
