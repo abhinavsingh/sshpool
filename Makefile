@@ -9,7 +9,10 @@ clean:
 
 doc:
 	$(MAKE) -C docs html
+
+audit:
 	pep257 sshpool/*.py
+	flake8 --ignore=W291,W293,E302 sshpool
 
 package:
 	python setup.py sdist

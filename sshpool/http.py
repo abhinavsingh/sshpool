@@ -23,11 +23,11 @@ class Http(object):
     
     def enable_channel_api(self):
         view = API.as_view('api')
-        self.web.add_url_rule('/channels', defaults={'alias': None}, view_func=view, methods=['GET',])
-        self.web.add_url_rule('/channels/<alias>', view_func=view, methods=['GET',])
-        self.web.add_url_rule('/channels', defaults={'alias': None}, view_func=view, methods=['POST',])
-        self.web.add_url_rule('/channels/<alias>', view_func=view, methods=['POST',])
-        self.web.add_url_rule('/channels/<alias>', view_func=view, methods=['DELETE',])
+        self.web.add_url_rule('/channels', defaults={'alias': None}, view_func=view, methods=['GET', ])
+        self.web.add_url_rule('/channels/<alias>', view_func=view, methods=['GET', ])
+        self.web.add_url_rule('/channels', defaults={'alias': None}, view_func=view, methods=['POST', ])
+        self.web.add_url_rule('/channels/<alias>', view_func=view, methods=['POST', ])
+        self.web.add_url_rule('/channels/<alias>', view_func=view, methods=['DELETE', ])
     
     def start(self, host, port, debug=False):
         self.web.run(host=host, port=port, debug=debug)

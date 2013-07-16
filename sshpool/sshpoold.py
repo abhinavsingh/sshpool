@@ -20,7 +20,7 @@ def main():
     args = parser.parse_args()
     
     for channel in args.channel:
-        _chan = Channel.init(channel)
+        Channel.init(channel)
     
     Http().start(args.host, args.port)
     
