@@ -9,6 +9,7 @@ clean:
 
 doc:
 	$(MAKE) -C docs html
+	pep257 sshpool/*.py
 
 package:
 	python setup.py sdist

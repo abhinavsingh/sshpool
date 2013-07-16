@@ -3,7 +3,9 @@
     sshpool.channel
     ~~~~~~~~~~~~~~~
 
-    This module maintain pool of SSH channels and allow communication via RESTful API
+    This module provides capability to spawn SSH channels in 
+    a separate process and ability to execute arbitrary 
+    shell commands by communicating over pipe.
 
     :copyright: (c) 2013 by Abhinav Singh.
     :license: BSD, see LICENSE for more details.
@@ -24,9 +26,17 @@ paramiko_transport_logger.setLevel(logging.WARNING)
 
 class Channel(multiprocessing.Process):
     
+    """Spawn SSH channel and execute shell commands by communicating over pipe."""
+    
     channels = dict()
     
     def __init__(self, channel):
+        """Initialize a new SSH channel.
+        
+        Args:
+            channel (str): DSN of format alias://user:pass@host:port.
+        
+        """
         multiprocessing.Process.__init__(self)
         chan = urlparse.urlparse(channel)
         
@@ -45,6 +55,7 @@ class Channel(multiprocessing.Process):
         self.start_time = time.time()
     
     def connect(self):
+        """Establish SSH channel. Raises exception in case of failure."""
         try:
             logger.info('connecting to %s' % self)
             self.client = paramiko.SSHClient()
@@ -66,6 +77,7 @@ class Channel(multiprocessing.Process):
             raise
     
     def run_once(self):
+        """Accept a command and execute over SSH channel, finally queue back command output for calling client."""
         cmd = self.inner.recv()
         stdin, stdout, stderr = self.client.exec_command(cmd)
         out, err = stdout.read(), stderr.read()
@@ -73,6 +85,7 @@ class Channel(multiprocessing.Process):
         self.inner.send(ret)
     
     def run(self):
+        """Execute channel workflow."""
         self.connect()
         try:
             while True:
@@ -89,21 +102,55 @@ class Channel(multiprocessing.Process):
     
     @staticmethod
     def init(channel, start=True):
+        """API to initialize and optionally start a new SSH channel.
+        
+        Args:
+            channel (str): DSN of format alias://user:pass@host:port.
+        
+        Kwargs:
+            start (bool): Whether to start initialized SSH channel.
+        
+        Returns:
+            Channel.
+        
+        It is highly recommended to use this API to initialize SSH channels 
+        as it updates global channel registry required for communication 
+        over RESTful API.
+        
+        """
         chan = Channel(channel)
         Channel.channels[chan.alias] = chan
         if start: chan.start()
         return chan
     
     def send(self, cmd):
+        """API to execute arbitrary commands over SSH channel.
+        
+        Args:
+            cmd (str): Command to execute.
+        
+        """
         logger.debug('sending command %s' % cmd)
         self.outer.send(cmd)
     
     def recv(self):
+        """API to receive output of last executed command over SSH channel.
+        
+        Returns:
+            str. Output of last executed command.
+        
+        """
         ret = self.outer.recv()
         logger.debug('receiving response %s' % ret)
         return ret
     
     def info(self):
+        """API to grab meta info about SSH channel.
+        
+        Returns:
+            dict.
+        
+        """
         return {
             'username': self.username,
             'password': self.password,

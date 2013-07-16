@@ -3,7 +3,7 @@
     sshpool.views
     ~~~~~~~~~~~~~
 
-    This module maintain pool of SSH channels and allow communication via RESTful API
+    This module provides HTTP views implementing available RESTful API's.
 
     :copyright: (c) 2013 by Abhinav Singh.
     :license: BSD, see LICENSE for more details.
@@ -18,7 +18,10 @@ logger = logging.getLogger('sshpool.views')
 
 class API(MethodView):
     
+    """REST API view."""
+    
     def get(self, alias):
+        """Retrieve meta info for one or all SSH channels."""
         if alias:
             if alias not in Channel.channels:
                 return Response('NOT FOUND', 400)
@@ -33,13 +36,12 @@ class API(MethodView):
         return jsonify(**kwargs)
     
     def post(self, alias):
-        # add new channel
+        """Start a new SSH channel or execute command over a SSH channel."""
         if not alias:
             channel = request.data
             _chan = Channel.init(channel)
             return 'OK'
         
-        # execute cmd on existing channel
         if alias not in Channel.channels:
             return Response('NOT FOUND', 400)
         
@@ -52,6 +54,7 @@ class API(MethodView):
         return chan.recv()
     
     def delete(self, alias):
+        """Stop/terminate a previously configured SSH channel."""
         if alias not in Channel.channels:
             return Response('NOT FOUND', 400)
         
