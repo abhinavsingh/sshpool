@@ -33,7 +33,7 @@ class Ctl(cmd.Cmd):
         if line is not None:
             if isinstance(line, unicode):
                 line = line.encode('utf-8')
-            self.stdout.write(line + '\n')
+            self.stdout.write('%s\n' % line)
     
     def do_status(self, alias):
         r = self.api.status(alias)

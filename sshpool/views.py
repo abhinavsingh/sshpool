@@ -24,7 +24,7 @@ class API(MethodView):
         """Retrieve meta info for one or all SSH channels."""
         if alias:
             if alias not in Channel.channels:
-                return Response('NOT FOUND', 400)
+                return Response('NOT FOUND', 404)
             
             chan = Channel.channels[alias]
             return jsonify(**chan.info())
@@ -39,24 +39,26 @@ class API(MethodView):
         """Start a new SSH channel or execute command over a SSH channel."""
         if not alias:
             channel = request.data
-            Channel.init(channel)
-            return 'OK'
+            try:
+                Channel.init(channel)
+                return 'OK'
+            except AssertionError, e:
+                return Response('BAD REQUEST', 400)
         
         if alias not in Channel.channels:
-            return Response('NOT FOUND', 400)
+            return Response('NOT FOUND', 404)
         
         chan = Channel.channels[alias]
         if not chan.is_alive():
             chan = Channel.init(str(chan))
         
-        cmd = request.data
-        chan.send(cmd)
+        chan.send(request.data)
         return chan.recv()
     
     def delete(self, alias):
         """Stop/terminate a previously configured SSH channel."""
         if alias not in Channel.channels:
-            return Response('NOT FOUND', 400)
+            return Response('NOT FOUND', 404)
         
         chan = Channel.channels[alias]
         chan.stop()
