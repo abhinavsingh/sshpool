@@ -46,7 +46,7 @@ class Ctl(cmd.Cmd):
             resp = r.json()
             for alias in resp:
                 info = resp[alias]
-                dsn = '%s:%s@%s:%s' % (info['username'], info['password'], info['hostname'], info['port'])
+                dsn = '%s:%s@%s:%s' % (info['user'], info['pass'], info['host'], info['port'])
                 status = "running" if info['is_alive'] else "dead"
                 uptime = int(time.time() - info['start_time'])
                 self.out('%s\t\t%s\t%s\t%s' % (alias, dsn, status, uptime))

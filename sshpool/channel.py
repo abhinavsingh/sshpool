@@ -159,9 +159,9 @@ class Channel(multiprocessing.Process):
         
         """
         return {
-            'username': self.username,
-            'password': self.password,
-            'hostname': self.hostname,
+            'user': self.username,
+            'pass': self.password,
+            'host': self.hostname,
             'port': self.port,
             'is_alive': self.is_alive(),
             'start_time': self.start_time,

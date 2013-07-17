@@ -34,7 +34,7 @@ class TestAPI(unittest.TestCase):
         r = self.app.get('/channels/dummy')
         self.assertEqual(r.status_code, 200)
         resp = json.loads(r.data)
-        self.assertDictContainsSubset({'hostname':'dummy.host'}, resp)
+        self.assertDictContainsSubset({'host':'dummy.host'}, resp)
         self.assertDictContainsSubset({'is_alive':True}, resp)
     
     def test_channel_list(self):

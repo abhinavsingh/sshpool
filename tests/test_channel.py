@@ -108,9 +108,9 @@ class TestChannel(unittest.TestCase):
     def test_info(self):
         chan = Channel.init('dummy://dummy.host', False)
         info = chan.info()
-        self.assertEqual(info['username'], getpass.getuser())
-        self.assertEqual(info['password'], None)
-        self.assertEqual(info['hostname'], 'dummy.host')
+        self.assertEqual(info['user'], getpass.getuser())
+        self.assertEqual(info['pass'], None)
+        self.assertEqual(info['host'], 'dummy.host')
         self.assertEqual(info['port'], 22)
         self.assertFalse(info['is_alive'])
     
