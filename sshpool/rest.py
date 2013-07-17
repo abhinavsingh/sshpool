@@ -52,6 +52,7 @@ class API(MethodView):
         
         chan = Channel.channels[alias]
         if not chan.is_alive():
+            logger.info('Channel alias %s is dead, restarting' % alias)
             chan = Channel.init(str(chan))
         chan.send(request.data)
         return jsonify(**chan.recv())
