@@ -53,7 +53,7 @@ class API(MethodView):
             chan = Channel.init(str(chan))
         
         chan.send(request.data)
-        return chan.recv()
+        return jsonify(**chan.recv())
     
     def delete(self, alias):
         """Stop/terminate a previously configured SSH channel."""

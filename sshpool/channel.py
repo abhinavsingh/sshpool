@@ -80,9 +80,11 @@ class Channel(multiprocessing.Process):
         """Accept a command and execute over SSH channel, finally queue back command output for calling client."""
         cmd = self.inner.recv()
         stdin, stdout, stderr = self.client.exec_command(cmd)
-        out, err = stdout.read(), stderr.read()
-        ret = out if len(err) == 0 else err
-        self.inner.send(ret)
+        self.inner.send({
+            'stdout': stdout.read(),
+            'stderr': stderr.read(),
+            'exit_code': stdout.channel.recv_exit_status(),
+        })
     
     def run(self):
         """Execute channel workflow."""
@@ -138,7 +140,7 @@ class Channel(multiprocessing.Process):
         """API to receive output of last executed command over SSH channel.
         
         Returns:
-            str. Output of last executed command.
+            dict. A dictionary containing stdout, stderr and exit code of executed command.
         
         """
         ret = self.outer.recv()

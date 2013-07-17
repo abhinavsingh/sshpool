@@ -72,13 +72,17 @@ class Ctl(cmd.Cmd):
         args = arg.split()
         alias = args[0]
         cmd = ' '.join(args[1:])
-        r = self.api.run(alias, cmd)
         
+        r = self.api.run(alias, cmd)
         if r is None: 
             return
         
         if r.status_code == 200:
-            self.out(r.text)
+            resp = r.json()
+            if resp['exit_code'] == 0:
+                self.out(resp['stdout'])
+            else:
+                self.out(resp['stderr'])
         else:
             self.out(r.status_code)
     

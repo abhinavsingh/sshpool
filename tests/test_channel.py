@@ -7,6 +7,8 @@ import paramiko
 import StringIO
 from sshpool.channel import Channel
 
+class TestObj(object): pass
+
 class TestChannel(unittest.TestCase):
     
     def test_dsn_parsing1(self):
@@ -89,22 +91,33 @@ class TestChannel(unittest.TestCase):
     @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
     def test_run(self, mock_connect, mock_exec_command):
         mock_connect.return_value = None
+        
         stdin = StringIO.StringIO()
         stdin.write('')
         stdin.seek(0)
+        
         stdout = StringIO.StringIO()
+        stdout.channel = TestObj()
+        stdout.channel.recv_exit_status = mock.MagicMock(return_value=0)
         stdout.write('Hello World')
         stdout.seek(0)
+        
         stderr = StringIO.StringIO()
         stderr.write('')
         stderr.seek(0)
+        
         mock_exec_command.return_value = stdin, stdout, stderr
+        
         chan = Channel.init('dummy://dummy.host', False)
         chan.send('echo Hello World')
         chan.connect()
         chan.run_once()
         self.assertTrue(chan.outer.poll())
-        self.assertEqual(chan.recv(), 'Hello World')
+        
+        rcvd = chan.recv()
+        self.assertDictContainsSubset({'stdout': 'Hello World'}, rcvd)
+        self.assertDictContainsSubset({'stderr': ''}, rcvd)
+        self.assertDictContainsSubset({'exit_code': 0}, rcvd)
     
     def test_send(self):
         chan = Channel.init('dummy://dummy.host', False)
