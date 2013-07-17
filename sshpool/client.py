@@ -18,7 +18,7 @@ logger = logging.getLogger('sshpool.client')
 requests_connpool_logger = logging.getLogger('requests.packages.urllib3.connectionpool')
 requests_connpool_logger.setLevel(logging.WARNING)
 
-class API(object):
+class Client(object):
     
     """SSH channel REST API client."""
     

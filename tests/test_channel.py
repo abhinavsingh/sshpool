@@ -4,37 +4,30 @@ import socket
 import getpass
 import unittest
 import paramiko
-import StringIO
+
+from .utils import exec_command
 from sshpool.channel import Channel
 
 class TestChannel(unittest.TestCase):
     
     def test_dsn_parsing1(self):
         with self.assertRaises(AssertionError):
-            chan = Channel('localhost')
+            chan = Channel('dummy.host')
     
     def test_dsn_parsing2(self):
-        chan = Channel('localhost://localhost')
-        self.assertEqual(chan.alias, 'localhost')
+        chan = Channel('dummy://dummy.host')
+        self.assertEqual(chan.alias, 'dummy')
         self.assertEqual(chan.username, getpass.getuser())
         self.assertEqual(chan.password, None)
-        self.assertEqual(chan.hostname, 'localhost')
-        self.assertEqual(chan.port, 22)
-    
-    def test_dsn_parsing2(self):
-        chan = Channel('localhost://localhost')
-        self.assertEqual(chan.alias, 'localhost')
-        self.assertEqual(chan.username, getpass.getuser())
-        self.assertEqual(chan.password, None)
-        self.assertEqual(chan.hostname, 'localhost')
+        self.assertEqual(chan.hostname, 'dummy.host')
         self.assertEqual(chan.port, 22)
     
     def test_dsn_parsing3(self):
-        chan = Channel('localhost://user:pass@localhost:2222')
-        self.assertEqual(chan.alias, 'localhost')
+        chan = Channel('dummy://user:pass@dummy.host:2222')
+        self.assertEqual(chan.alias, 'dummy')
         self.assertEqual(chan.username, 'user')
         self.assertEqual(chan.password, 'pass')
-        self.assertEqual(chan.hostname, 'localhost')
+        self.assertEqual(chan.hostname, 'dummy.host')
         self.assertEqual(chan.port, 2222)
     
     def test_ssh_host_unknown(self):
@@ -72,7 +65,7 @@ class TestChannel(unittest.TestCase):
         chan.send('ls -l')
         chan.run()
         self.assertTrue(chan.outer.poll())
-        self.assertEqual(chan.recv(), 'SSHException()')
+        self.assertEqual({'exception':'SSHException()'}, chan.recv())
     
     @mock.patch('sshpool.channel.paramiko.SSHClient.exec_command')
     @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
@@ -83,30 +76,22 @@ class TestChannel(unittest.TestCase):
         chan.send('ls -l')
         chan.run()
         self.assertTrue(chan.outer.poll())
-        self.assertEqual(chan.recv(), 'KeyboardInterrupt()')
+        self.assertEqual({'exception':'KeyboardInterrupt()'}, chan.recv())
     
     @mock.patch('sshpool.channel.paramiko.SSHClient.exec_command')
     @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
     def test_run(self, mock_connect, mock_exec_command):
         mock_connect.return_value = None
-        stdin = StringIO.StringIO()
-        stdin.write('')
-        stdin.seek(0)
-        stdout = StringIO.StringIO()
-        stdout.write('Hello World')
-        stdout.seek(0)
-        stderr = StringIO.StringIO()
-        stderr.write('')
-        stderr.seek(0)
-        mock_exec_command.return_value = stdin, stdout, stderr
+        mock_exec_command.return_value = exec_command('Hello World', '', 0)
         chan = Channel.init('dummy://dummy.host', False)
         chan.send('echo Hello World')
         chan.connect()
         chan.run_once()
-        time.sleep(0.1)
         self.assertTrue(chan.outer.poll())
-        self.assertEqual(chan.recv(), 'Hello World')
-        time.sleep(0.1)
+        rcvd = chan.recv()
+        self.assertDictContainsSubset({'stdout': 'Hello World'}, rcvd)
+        self.assertDictContainsSubset({'stderr': ''}, rcvd)
+        self.assertDictContainsSubset({'exit_code': 0}, rcvd)
     
     def test_send(self):
         chan = Channel.init('dummy://dummy.host', False)
@@ -123,8 +108,21 @@ class TestChannel(unittest.TestCase):
     def test_info(self):
         chan = Channel.init('dummy://dummy.host', False)
         info = chan.info()
-        self.assertEqual(info['username'], getpass.getuser())
-        self.assertEqual(info['password'], None)
-        self.assertEqual(info['hostname'], 'dummy.host')
+        self.assertEqual(info['user'], getpass.getuser())
+        self.assertEqual(info['pass'], None)
+        self.assertEqual(info['host'], 'dummy.host')
         self.assertEqual(info['port'], 22)
         self.assertFalse(info['is_alive'])
+    
+    @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
+    def test_start_stop(self, mock_connect):
+        mock_connect.return_value = None
+        chan = Channel.init('dummy://dummy.host')
+        time.sleep(0.1)
+        self.assertTrue(chan.is_alive())
+        self.assertDictContainsSubset({chan.alias: chan}, Channel.channels)
+        chan.stop()
+        time.sleep(0.1)
+        self.assertTrue(not chan.is_alive())
+        with self.assertRaises(KeyError):
+            Channel.channels[chan.alias]
