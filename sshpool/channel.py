@@ -80,6 +80,7 @@ class Channel(multiprocessing.Process):
         """Accept a command and execute over SSH channel, finally queue back command output for calling client."""
         cmd = self.inner.recv()
         stdin, stdout, stderr = self.client.exec_command(cmd)
+        stdin.close()
         self.inner.send({
             'stdout': stdout.read(),
             'stderr': stderr.read(),
