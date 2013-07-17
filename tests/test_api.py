@@ -3,7 +3,7 @@ import mock
 import json
 import unittest
 
-from .utils import TestObj, exec_command
+from .utils import TestObj
 from sshpool.rest import API, HTTP
 
 class TestAPI(unittest.TestCase):
@@ -27,7 +27,7 @@ class TestAPI(unittest.TestCase):
     @mock.patch('sshpool.rest.Channel.connect')
     def test_add_channel_success(self, mock_connect, mock_exec_command):
         mock_connect.return_value = None
-        mock_exec_command.return_value = exec_command('Hello World', '', 0)
+        mock_exec_command.return_value = 'Hello World', '', 0
         r = self.app.post('/channels', data='dummy://dummy.host')
         self.assertEqual(r.data, 'OK')
         self.assertEqual(r.status_code, 200)

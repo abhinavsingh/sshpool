@@ -44,6 +44,7 @@ class API(MethodView):
                 Channel.init(channel)
                 return 'OK'
             except AssertionError, e:
+                logger.critical('Unable to start SSH channel due to %r' % e)
                 return Response('BAD REQUEST', 400)
         
         if alias not in Channel.channels:

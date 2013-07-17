@@ -27,7 +27,7 @@ def main():
     for channel in args.channel:
         Channel.init(channel)
     
-    Http(args.host, args.port).start()
+    HTTP(args.host, args.port).start()
     
     for alias in Channel.channels:
         chan = Channel.channels[alias]

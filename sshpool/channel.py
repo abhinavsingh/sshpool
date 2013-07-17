@@ -77,17 +77,24 @@ class Channel(multiprocessing.Process):
             raise
     
     def exec_command(self, cmd):
-        return self.client.exec_command(cmd)
+        """Wrapper over paramiko.SSHClient.exec_command.
+        
+        Returns:
+            tuple.
+        
+        """
+        stdin, stdout, stderr = self.client.exec_command(cmd)
+        stdin.close()
+        return stdout.read(), stderr.read(), stdout.channel.recv_exit_status()
     
     def run_once(self):
         """Accept a command and execute over SSH channel, finally queue back command output for calling client."""
         cmd = self.inner.recv()
-        stdin, stdout, stderr = self.exec_command(cmd)
-        stdin.close()
+        stdout, stderr, exit_code = self.exec_command(cmd)
         self.inner.send({
-            'stdout': stdout.read(),
-            'stderr': stderr.read(),
-            'exit_code': stdout.channel.recv_exit_status(),
+            'stdout': stdout,
+            'stderr': stderr,
+            'exit_code': exit_code,
         })
     
     def run(self):
