@@ -82,7 +82,8 @@ Attribute | Description
 --- | ---
 stdout | stdout stream
 stderr | stderr stream
-exit_code | exit code of runned command
+exit_code | exit code of executed command
+exception | available if command execution failed internally
 
 sshpoolctl
 ----------

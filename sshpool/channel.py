@@ -105,10 +105,10 @@ class Channel(multiprocessing.Process):
                 self.run_once()
         except paramiko.SSHException, e:
             logger.critical('connection dropped with exception %r' % e)
-            self.inner.send('%r' % e)
+            self.inner.send({'exception': '%r' % e})
         except KeyboardInterrupt, e:
             logger.info('caught keyboard interrupt, stopping %s' % self)
-            self.inner.send('%r' % e)
+            self.inner.send({'exception': '%r' % e})
         finally:
             logger.info('closing connection to %s' % self)
             self.client.close()

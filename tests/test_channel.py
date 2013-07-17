@@ -65,7 +65,7 @@ class TestChannel(unittest.TestCase):
         chan.send('ls -l')
         chan.run()
         self.assertTrue(chan.outer.poll())
-        self.assertEqual(chan.recv(), 'SSHException()')
+        self.assertEqual({'exception':'SSHException()'}, chan.recv())
     
     @mock.patch('sshpool.channel.paramiko.SSHClient.exec_command')
     @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
@@ -76,7 +76,7 @@ class TestChannel(unittest.TestCase):
         chan.send('ls -l')
         chan.run()
         self.assertTrue(chan.outer.poll())
-        self.assertEqual(chan.recv(), 'KeyboardInterrupt()')
+        self.assertEqual({'exception':'KeyboardInterrupt()'}, chan.recv())
     
     @mock.patch('sshpool.channel.paramiko.SSHClient.exec_command')
     @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
