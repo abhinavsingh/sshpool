@@ -76,10 +76,13 @@ class Channel(multiprocessing.Process):
             logger.critical('connection to %s failed with reason %r' % (self, e))
             raise
     
+    def exec_command(self, cmd):
+        return self.client.exec_command(cmd)
+    
     def run_once(self):
         """Accept a command and execute over SSH channel, finally queue back command output for calling client."""
         cmd = self.inner.recv()
-        stdin, stdout, stderr = self.client.exec_command(cmd)
+        stdin, stdout, stderr = self.exec_command(cmd)
         stdin.close()
         self.inner.send({
             'stdout': stdout.read(),

@@ -10,8 +10,9 @@
 """
 import sshpool
 import argparse
+
 from .channel import Channel
-from .http import Http
+from .rest import HTTP
 
 def main():
     parser = argparse.ArgumentParser(
@@ -26,7 +27,7 @@ def main():
     for channel in args.channel:
         Channel.init(channel)
     
-    Http().start(args.host, args.port)
+    Http(args.host, args.port).start()
     
     for alias in Channel.channels:
         chan = Channel.channels[alias]

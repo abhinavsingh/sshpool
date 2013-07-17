@@ -4,39 +4,30 @@ import socket
 import getpass
 import unittest
 import paramiko
-import StringIO
-from sshpool.channel import Channel
 
-class TestObj(object): pass
+from .utils import exec_command
+from sshpool.channel import Channel
 
 class TestChannel(unittest.TestCase):
     
     def test_dsn_parsing1(self):
         with self.assertRaises(AssertionError):
-            chan = Channel('localhost')
+            chan = Channel('dummy.host')
     
     def test_dsn_parsing2(self):
-        chan = Channel('localhost://localhost')
-        self.assertEqual(chan.alias, 'localhost')
+        chan = Channel('dummy://dummy.host')
+        self.assertEqual(chan.alias, 'dummy')
         self.assertEqual(chan.username, getpass.getuser())
         self.assertEqual(chan.password, None)
-        self.assertEqual(chan.hostname, 'localhost')
-        self.assertEqual(chan.port, 22)
-    
-    def test_dsn_parsing2(self):
-        chan = Channel('localhost://localhost')
-        self.assertEqual(chan.alias, 'localhost')
-        self.assertEqual(chan.username, getpass.getuser())
-        self.assertEqual(chan.password, None)
-        self.assertEqual(chan.hostname, 'localhost')
+        self.assertEqual(chan.hostname, 'dummy.host')
         self.assertEqual(chan.port, 22)
     
     def test_dsn_parsing3(self):
-        chan = Channel('localhost://user:pass@localhost:2222')
-        self.assertEqual(chan.alias, 'localhost')
+        chan = Channel('dummy://user:pass@dummy.host:2222')
+        self.assertEqual(chan.alias, 'dummy')
         self.assertEqual(chan.username, 'user')
         self.assertEqual(chan.password, 'pass')
-        self.assertEqual(chan.hostname, 'localhost')
+        self.assertEqual(chan.hostname, 'dummy.host')
         self.assertEqual(chan.port, 2222)
     
     def test_ssh_host_unknown(self):
@@ -91,29 +82,12 @@ class TestChannel(unittest.TestCase):
     @mock.patch('sshpool.channel.paramiko.SSHClient.connect')
     def test_run(self, mock_connect, mock_exec_command):
         mock_connect.return_value = None
-        
-        stdin = StringIO.StringIO()
-        stdin.write('')
-        stdin.seek(0)
-        
-        stdout = StringIO.StringIO()
-        stdout.channel = TestObj()
-        stdout.channel.recv_exit_status = mock.MagicMock(return_value=0)
-        stdout.write('Hello World')
-        stdout.seek(0)
-        
-        stderr = StringIO.StringIO()
-        stderr.write('')
-        stderr.seek(0)
-        
-        mock_exec_command.return_value = stdin, stdout, stderr
-        
+        mock_exec_command.return_value = exec_command('Hello World', '', 0)
         chan = Channel.init('dummy://dummy.host', False)
         chan.send('echo Hello World')
         chan.connect()
         chan.run_once()
         self.assertTrue(chan.outer.poll())
-        
         rcvd = chan.recv()
         self.assertDictContainsSubset({'stdout': 'Hello World'}, rcvd)
         self.assertDictContainsSubset({'stderr': ''}, rcvd)

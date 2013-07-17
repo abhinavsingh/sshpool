@@ -12,7 +12,8 @@ import sys
 import cmd
 import time
 import logging
-from .client import API
+
+from .client import Client
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger('sshpool.ctl')
@@ -27,7 +28,7 @@ class Ctl(cmd.Cmd):
         cmd.Cmd.__init__(self)
         self.host = host
         self.port = port
-        self.api = API(self.host, self.port)
+        self.client = Client(self.host, self.port)
     
     def out(self, line):
         if line is not None:
@@ -36,7 +37,7 @@ class Ctl(cmd.Cmd):
             self.stdout.write('%s\n' % line)
     
     def do_status(self, alias):
-        r = self.api.status(alias)
+        r = self.client.status(alias)
         
         if r is None: 
             return
@@ -56,7 +57,7 @@ class Ctl(cmd.Cmd):
         self.out('status\t\tView status of started channels')
     
     def do_start(self, dsn):
-        r = self.api.start(dsn)
+        r = self.client.start(dsn)
         if r is None: 
             return
         
@@ -73,7 +74,7 @@ class Ctl(cmd.Cmd):
         alias = args[0]
         cmd = ' '.join(args[1:])
         
-        r = self.api.run(alias, cmd)
+        r = self.client.run(alias, cmd)
         if r is None: 
             return
         
@@ -90,7 +91,7 @@ class Ctl(cmd.Cmd):
         self.out('run <alias> <cmd>\tRun arbitrary commands over a channel')
     
     def do_stop(self, alias):
-        r = self.api.stop(alias)
+        r = self.client.stop(alias)
         
         if r is None: 
             return
