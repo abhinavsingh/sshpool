@@ -76,13 +76,26 @@ class Channel(multiprocessing.Process):
             logger.critical('connection to %s failed with reason %r' % (self, e))
             raise
     
+    def exec_command(self, cmd):
+        """Wrapper over paramiko.SSHClient.exec_command.
+        
+        Returns:
+            tuple.
+        
+        """
+        stdin, stdout, stderr = self.client.exec_command(cmd)
+        stdin.close()
+        return stdout.read(), stderr.read(), stdout.channel.recv_exit_status()
+    
     def run_once(self):
         """Accept a command and execute over SSH channel, finally queue back command output for calling client."""
         cmd = self.inner.recv()
-        stdin, stdout, stderr = self.client.exec_command(cmd)
-        out, err = stdout.read(), stderr.read()
-        ret = out if len(err) == 0 else err
-        self.inner.send(ret)
+        stdout, stderr, exit_code = self.exec_command(cmd)
+        self.inner.send({
+            'stdout': stdout,
+            'stderr': stderr,
+            'exit_code': exit_code,
+        })
     
     def run(self):
         """Execute channel workflow."""
@@ -92,10 +105,10 @@ class Channel(multiprocessing.Process):
                 self.run_once()
         except paramiko.SSHException, e:
             logger.critical('connection dropped with exception %r' % e)
-            self.inner.send('%r' % e)
+            self.inner.send({'exception': '%r' % e})
         except KeyboardInterrupt, e:
             logger.info('caught keyboard interrupt, stopping %s' % self)
-            self.inner.send('%r' % e)
+            self.inner.send({'exception': '%r' % e})
         finally:
             logger.info('closing connection to %s' % self)
             self.client.close()
@@ -114,7 +127,7 @@ class Channel(multiprocessing.Process):
             Channel.
         
         It is highly recommended to use this API to initialize SSH channels 
-        as it updates global channel registry required for communication 
+        as it also updates global channel registry required for communication 
         over RESTful API.
         
         """
@@ -138,7 +151,7 @@ class Channel(multiprocessing.Process):
         """API to receive output of last executed command over SSH channel.
         
         Returns:
-            str. Output of last executed command.
+            dict. A dictionary containing stdout, stderr and exit code of executed command.
         
         """
         ret = self.outer.recv()
@@ -153,13 +166,23 @@ class Channel(multiprocessing.Process):
         
         """
         return {
-            'username': self.username,
-            'password': self.password,
-            'hostname': self.hostname,
+            'user': self.username,
+            'pass': self.password,
+            'host': self.hostname,
             'port': self.port,
             'is_alive': self.is_alive(),
             'start_time': self.start_time,
         }
+    
+    def stop(self):
+        """API to terminate SSH channel.
+        
+        It is highly recommended to use this API to terminate SSH channel
+        process as it also updates global channel registry.
+        
+        """
+        self.terminate()
+        del Channel.channels[self.alias]
     
     def __str__(self):
         return '%s://%s:%s@%s:%s' % (self.alias, self.username, self.password, self.hostname, self.port)

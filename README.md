@@ -44,11 +44,9 @@ Optionally, `sshpoold` daemon can also be started with one or more SSH channel D
 Channel DSN
 -----------
 
-[DSN](http://en.wikipedia.org/wiki/Data_source_name) string describes a connection to SSH server. Format:
+[DSN](http://en.wikipedia.org/wiki/Data_source_name) string describes a connection to SSH server. Format `alias://user:pass@host:port`:
 
-    alias://user:pass@host:port
-
-Attributes | Description
+Attribute | Description
 --- | ---
 alias | *(required)* An alias to use with `sshpoolctl` and RESTful API's
 user | Defaults to current system user
@@ -56,10 +54,41 @@ pass | If not provided `sshpoold` will attempt to use public keys for authentica
 host | *(required)* IP Address or FQDN
 port | Defaults to 22
 
+REST API
+--------
+
+Resource | Method | Parameters | Response | Description
+--- | --- | --- | --- | ---
+/channels | GET | - | JSON dict | Retrieve meta info for all SSH channels
+/channels/&lt;alias&gt; | GET | - | JSON dict | Retrieve meta info for a specific SSH channel
+/channels | POST | DSN | "OK" | Start a new SSH channel
+/channels/&lt;alias&gt; | POST | command | JSON dict | Execute arbitrary command over a SSH channel
+/channels/&lt;alias&gt; | DELETE | - | "OK" | Terminate a SSH channel
+
+Channel meta info dictionary consists of following attributes:
+
+Attribute | Description
+--- | ---
+user | username used for SSH channel
+pass | None or string
+host | IP Address or FQDN
+port | SSH server port used for connection
+is_alive | boolean
+start_time | epoch timestamp of when SSH channel was started
+
+Command output dictionary consists of following attributes:
+
+Attribute | Description
+--- | ---
+stdout | stdout stream
+stderr | stderr stream
+exit_code | exit code of executed command
+exception | available if command execution failed internally
+
 sshpoolctl
 ----------
 
-`sshpoolctl` provides an interactive shell to communicate with `sshpoold` daemon via RESTful API
+`sshpoolctl` provides an interactive shell to communicate with `sshpoold` daemon
 
     $ sshpoolctl -h
     
