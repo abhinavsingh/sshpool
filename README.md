@@ -56,10 +56,21 @@ pass | If not provided `sshpoold` will attempt to use public keys for authentica
 host | *(required)* IP Address or FQDN
 port | Defaults to 22
 
+REST API
+--------
+
+Resource | Method | Parameters | Description
+--- | --- | --- | ---
+/channels | GET | - | Retrieve meta info for all SSH channels
+/channels/&lt;alias&gt; | GET | - | Retrieve meta info for a specific SSH channel
+/channels | POST | DSN | Start a new SSH channel
+/channels/&lt;alias&gt; | POST | cmd | Execute arbitrary command over a SSH channel
+/channels/&lt;alias&gt; | DELETE | - | Terminate a SSH channel
+
 sshpoolctl
 ----------
 
-`sshpoolctl` provides an interactive shell to communicate with `sshpoold` daemon via RESTful API
+`sshpoolctl` provides an interactive shell to communicate with `sshpoold` daemon
 
     $ sshpoolctl -h
     
