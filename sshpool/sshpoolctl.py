@@ -25,12 +25,12 @@ def main():
     try:
         ctl = Ctl(args.host, args.port)
         ctl.cmdloop()
-    except KeyboardInterrupt, e:
+    except KeyboardInterrupt as e:
         pass
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
     
-    print 'done!'
+    print('done!')
 
 if __name__ == '__main__':
     main()

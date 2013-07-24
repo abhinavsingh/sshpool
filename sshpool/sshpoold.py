@@ -33,7 +33,7 @@ def main():
         chan = Channel.channels[alias]
         chan.join()
     
-    print 'done!'
+    print('done!')
 
 if __name__ == '__main__':
     main()

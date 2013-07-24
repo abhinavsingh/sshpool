@@ -107,8 +107,8 @@ class Client(object):
         """
         try:
             return requests.get(self.url(resource))
-        except requests.exceptions.ConnectionError, e:
-            print e
+        except requests.exceptions.ConnectionError as e:
+            print(e)
             return None
     
     def post(self, resource, data):
@@ -123,8 +123,8 @@ class Client(object):
         """
         try:
             return requests.post(self.url(resource), data=data)
-        except requests.exceptions.ConnectionError, e:
-            print e
+        except requests.exceptions.ConnectionError as e:
+            print(e)
             return None
     
     def delete(self, resource):
@@ -139,6 +139,6 @@ class Client(object):
         """
         try:
             return requests.delete(self.url(resource))
-        except requests.exceptions.ConnectionError, e:
-            print e
+        except requests.exceptions.ConnectionError as e:
+            print(e)
             return None

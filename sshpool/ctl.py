@@ -32,7 +32,7 @@ class Ctl(cmd.Cmd):
     
     def out(self, line):
         if line is not None:
-            if isinstance(line, unicode):
+            if isinstance(line, str):
                 line = line.encode('utf-8')
             self.stdout.write('%s\n' % line)
     

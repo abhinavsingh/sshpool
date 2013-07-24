@@ -43,7 +43,7 @@ class API(MethodView):
             try:
                 Channel.init(channel)
                 return 'OK'
-            except AssertionError, e:
+            except AssertionError as e:
                 logger.critical('Unable to start SSH channel due to %r' % e)
                 return Response('BAD REQUEST', 400)
         

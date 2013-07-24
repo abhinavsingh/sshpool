@@ -14,9 +14,13 @@ import time
 import socket
 import logging
 import getpass
-import urlparse
 import paramiko
 import multiprocessing
+
+try:
+    import urllib.parse as urlparse
+except ImportError:
+    import urlparse
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] %(message)s')
 logger = logging.getLogger('sshpool.channel')
@@ -63,16 +67,16 @@ class Channel(multiprocessing.Process):
             self.client.set_missing_host_key_policy(paramiko.WarningPolicy())
             self.client.connect(self.hostname, self.port, self.username, self.password)
             logger.info('connected to %s' % self)
-        except socket.gaierror, e:
+        except socket.gaierror as e:
             logger.critical('connection to %s failed because host is not known' % self)
             raise
-        except paramiko.BadAuthenticationType, e:
+        except paramiko.BadAuthenticationType as e:
             logger.critical('connection to %s failed due to unsupported authentication type, supported types are %s' % (self, ','.join(e.allowed_types)))
             raise
-        except paramiko.AuthenticationException, e:
+        except paramiko.AuthenticationException as e:
             logger.critical('connection to %s failed due to authentication failure' % self)
             raise
-        except Exception, e:  # pragma: no cover
+        except Exception as e:  # pragma: no cover
             logger.critical('connection to %s failed with reason %r' % (self, e))
             raise
     
@@ -103,10 +107,10 @@ class Channel(multiprocessing.Process):
         try:
             while True:
                 self.run_once()
-        except paramiko.SSHException, e:
+        except paramiko.SSHException as e:
             logger.critical('connection dropped with exception %r' % e)
             self.inner.send({'exception': '%r' % e})
-        except KeyboardInterrupt, e:
+        except KeyboardInterrupt as e:
             logger.info('caught keyboard interrupt, stopping %s' % self)
             self.inner.send({'exception': '%r' % e})
         finally:
