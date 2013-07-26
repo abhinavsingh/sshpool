@@ -1,11 +1,15 @@
 .project
 .pydevproject
 .settings
+
+*.pyc
 .coverage
 .tox
-*.pyc
 cover
+
 dist
 sshpool.egg-info
+
 sshpoold
 sshpoolctl
+config.txt
