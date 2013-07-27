@@ -8,7 +8,6 @@
     :copyright: (c) 2013 by Abhinav Singh.
     :license: BSD, see LICENSE for more details.
 """
-import sys
 import sshpool
 import argparse
 import logging
@@ -37,7 +36,6 @@ def main():
             channels += open(args.config, 'rb').read().strip().split()
         except IOError as e:
             logger.error(e)
-            sys.exit(1)
     
     for channel in channels:
         Channel.init(channel)
