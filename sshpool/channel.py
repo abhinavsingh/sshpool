@@ -30,7 +30,12 @@ paramiko_transport_logger.setLevel(logging.WARNING)
 
 class Channel(multiprocessing.Process):
     
-    """Spawn SSH channel and provides communication over pipe."""
+    """Spawn SSH channel and provides communication over pipe.
+    
+    Attributes:
+        channel (str): DSN of format alias://user:pass@host:port.
+    
+    """
     
     channels = dict()
     
