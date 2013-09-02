@@ -31,6 +31,9 @@ classifiers = [
     'Topic :: Utilities',
 ]
 
+install_requires = open('requirements.txt', 'rb').read().strip().split()
+tests_require = open('test_requirements.txt', 'rb').read().strip().split()
+
 setup(
     name                = 'sshpool',
     version             = sshpool.__version__,
@@ -41,8 +44,8 @@ setup(
     url                 = sshpool.__homepage__,
     license             = sshpool.__license__,
     packages            = find_packages(),
-    install_requires    = open('requirements.txt', 'rb').read().strip().split(),
-    tests_require       = open('test_requirements.txt', 'rb').read().strip().split(),
+    install_requires    = install_requires,
+    tests_require       = tests_require,
     entry_points        = entry_points,
     classifiers         = classifiers
 )

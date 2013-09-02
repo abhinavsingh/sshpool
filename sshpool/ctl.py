@@ -32,7 +32,7 @@ class Ctl(cmd.Cmd):
     
     def out(self, line):
         if line is not None:
-            if isinstance(line, unicode):
+            if isinstance(line, str):
                 line = line.encode('utf-8')
             self.stdout.write('%s\n' % line)
     
@@ -43,7 +43,7 @@ class Ctl(cmd.Cmd):
             return
         
         if r.status_code == 200:
-            resp = r.json()
+            resp = {alias:r.json()} if alias else r.json()
             for alias in resp:
                 info = resp[alias]
                 dsn = '%s:%s@%s:%s' % (info['user'], info['pass'], info['host'], info['port'])
