@@ -3,7 +3,7 @@ SSHPool
 
 Manage persistent pool of SSH channels accessible via RESTful API and command line utility
 
-![Build status](https://api.travis-ci.org/abhinavsingh/sshpool.png)
+![alt text](https://travis-ci.org/abhinavsingh/sshpool.svg?branch=develop "Build Status")
 
 Install
 -------
